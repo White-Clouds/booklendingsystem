@@ -108,6 +108,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 # 定义了一个名为Borrow的模型，代表借阅记录
 class Borrow(models.Model):
+    RETURN_STATUS = [
+        (0, '未归还'),
+        (1, '已归还'),
+    ]
     # 用户，外键关联到User模型，当关联的User对象被删除时，该借阅记录也会被删除
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='用户ID')
     # 借阅的图书，外键关联到Book模型，当关联的Book对象被删除时，该借阅记录也会被删除
@@ -119,7 +123,7 @@ class Borrow(models.Model):
     # 到期日期
     due_date = models.DateField(verbose_name='到期日期')
     # 是否已归还，0表示未归还，1表示已归还，默认为0
-    is_returned = models.IntegerField(default=0, verbose_name='是否归还')
+    is_returned = models.IntegerField(choices=RETURN_STATUS, default=0, verbose_name='是否归还')
 
     def __str__(self):
         # 返回"{用户名} 借阅了 {图书标题}"作为对象的字符串表示
