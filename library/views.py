@@ -1,12 +1,13 @@
+from datetime import timedelta
+
 from django.contrib.auth import login
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.forms import UserCreationForm
+from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
-from datetime import timedelta
-from django.core.paginator import Paginator
 
 from .forms import UserForm
 from .models import Book, Borrow
@@ -48,7 +49,7 @@ def borrow_books(request):
     if request.method == 'POST':
         book_ids = request.POST.getlist('borrow_books')
         days = int(request.POST.get('days', 7))
-        days = min(max(days, 1), 30)  # 确保天数在1到30天之间
+        days = min(max(days, 1), 30)
 
         for book_id in book_ids:
             book = get_object_or_404(Book, id=book_id)
@@ -72,7 +73,7 @@ def borrow_records(request):
     query = request.GET.get('q')
     status_filter = request.GET.get('status')
 
-    borrows = Borrow.objects.filter(user=user)
+    borrows = Borrow.objects.filter(user=user).order_by('id')
 
     if query:
         borrows = borrows.filter(book__title__icontains=query)
@@ -80,7 +81,7 @@ def borrow_records(request):
     if status_filter:
         borrows = borrows.filter(is_returned=status_filter)
 
-    paginator = Paginator(borrows, 10)  # 每页显示10条记录
+    paginator = Paginator(borrows, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 

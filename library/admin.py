@@ -2,6 +2,7 @@
 from django.contrib import admin
 # 导入Django的UserAdmin类
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+
 # 导入当前应用的模型
 from .models import User, Book, Borrow
 
