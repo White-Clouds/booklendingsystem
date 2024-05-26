@@ -1,46 +1,58 @@
 {% extends 'library/base.html' %}
 
 {% block content %}
-    <h1>图书列表</h1>
+    <h1 class="mb-4">图书列表</h1>
     <form method="get" class="form-inline mb-3">
         <input type="text" name="q" class="form-control mr-2" placeholder="搜索书名" value="{{ query }}">
         <button type="submit" class="btn btn-primary">搜索</button>
     </form>
-    <table class="table table-striped">
-        <thead>
-        <tr>
-            <th>书名</th>
-            <th>作者</th>
-            <th>出版日期</th>
-            <th>ISBN</th>
-            <th>可用</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for book in page_obj %}
-            <tr>
-                <td>{{ book.title }}</td>
-                <td>{{ book.author }}</td>
-                <td>{{ book.publication_date }}</td>
-                <td>{{ book.isbn }}</td>
-                <td>{{ book.available|yesno:"是,否" }}</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    <div class="pagination">
-        <span class="step-links">
+    <form method="post" action="{% url 'borrow_books' %}">
+        {% csrf_token %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col"><input type="checkbox" id="select-all"></th>
+                    <th scope="col">书名</th>
+                    <th scope="col">作者</th>
+                    <th scope="col">出版年份</th>
+                    <th scope="col">ISBN</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for book in page_obj %}
+                    <tr>
+                        <td><input type="checkbox" name="borrow_books" value="{{ book.id }}"></td>
+                        <td>{{ book.title }}</td>
+                        <td>{{ book.author }}</td>
+                        <td>{{ book.published_year }}</td>
+                        <td>{{ book.isbn }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit" class="btn btn-primary mb-3">借阅选中的书籍</button>
+    </form>
+    <nav>
+        <ul class="pagination">
             {% if page_obj.has_previous %}
-                <a href="?page=1{% if query %}&q={{ query }}{% endif %}">首页</a>
-                <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">上一页</a>
+                <li class="page-item"><a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}">首页</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">上一页</a></li>
             {% endif %}
-            <span class="current">
-                第 {{ page_obj.number }} 页，共 {{ page_obj.paginator.num_pages }} 页
-            </span>
+            <li class="page-item disabled">
+                <span class="page-link">第 {{ page_obj.number }} 页，共 {{ page_obj.paginator.num_pages }} 页</span>
+            </li>
             {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">下一页</a>
-                <a href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}">末页</a>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">下一页</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}">末页</a></li>
             {% endif %}
-        </span>
-    </div>
+        </ul>
+    </nav>
+    <script>
+        document.getElementById('select-all').onclick = function() {
+            var checkboxes = document.getElementsByName('borrow_books');
+            for (var checkbox of checkboxes) {
+                checkbox.checked = this.checked;
+            }
+        }
+    </script>
 {% endblock %}
