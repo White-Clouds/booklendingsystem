@@ -5,6 +5,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
+from datetime import timedelta
 from django.core.paginator import Paginator
 
 from .forms import UserForm
@@ -12,13 +13,13 @@ from .models import Book, Borrow
 
 
 def home(request):
-    books = Book.objects.all()
+    books = Book.objects.all().order_by('id')
     query = request.GET.get('q')
 
     if query:
         books = books.filter(title__icontains=query)
 
-    paginator = Paginator(books, 10)  # 每页显示10本书
+    paginator = Paginator(books, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -45,11 +46,22 @@ def borrow_book(request, book_id):
 @login_required
 def borrow_books(request):
     if request.method == 'POST':
-        book_ids = request.POST.getlist('books')
-        due_date = request.POST['due_date']
+        book_ids = request.POST.getlist('borrow_books')
+        days = int(request.POST.get('days', 7))
+        days = min(max(days, 1), 30)  # 确保天数在1到30天之间
+
         for book_id in book_ids:
-            book = get_object_or_404(Book, pk=book_id)
-            Borrow.objects.create(user=request.user, book=book, due_date=due_date)
+            book = get_object_or_404(Book, id=book_id)
+            borrow, created = Borrow.objects.get_or_create(
+                user=request.user,
+                book=book,
+                is_returned=0,
+                defaults={'due_date': timezone.now().date() + timedelta(days=days)}
+            )
+            if not created:
+                borrow.due_date = timezone.now().date() + timedelta(days=days)
+                borrow.save()
+
         return redirect('borrow_records')
     return redirect('home')
 
