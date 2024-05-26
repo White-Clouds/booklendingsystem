@@ -2,29 +2,45 @@
 
 {% block content %}
     <h1>图书列表</h1>
-    <form method="get" class="form-inline mb-4">
-        <input type="text" name="search" class="form-control mr-2" placeholder="搜索书名">
+    <form method="get" class="form-inline mb-3">
+        <input type="text" name="q" class="form-control mr-2" placeholder="搜索书名" value="{{ query }}">
         <button type="submit" class="btn btn-primary">搜索</button>
     </form>
-    <form method="post" action="{% url 'borrow_books' %}">
-        {% csrf_token %}
-        <div class="row">
-            {% for book in books %}
-                <div class="col-md-4">
-                    <div class="card mb-4">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ book.title }}</h5>
-                            <p class="card-text">{{ book.author }}</p>
-                            <input type="checkbox" name="books" value="{{ book.id }}"> 选择
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-        <div class="form-group">
-            <label for="due_date">到期日期</label>
-            <input type="date" class="form-control" id="due_date" name="due_date" required>
-        </div>
-        <button type="submit" class="btn btn-success">借阅选中的图书</button>
-    </form>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>书名</th>
+            <th>作者</th>
+            <th>出版日期</th>
+            <th>ISBN</th>
+            <th>可用</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for book in page_obj %}
+            <tr>
+                <td>{{ book.title }}</td>
+                <td>{{ book.author }}</td>
+                <td>{{ book.publication_date }}</td>
+                <td>{{ book.isbn }}</td>
+                <td>{{ book.available|yesno:"是,否" }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <div class="pagination">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{% if query %}&q={{ query }}{% endif %}">首页</a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">上一页</a>
+            {% endif %}
+            <span class="current">
+                第 {{ page_obj.number }} 页，共 {{ page_obj.paginator.num_pages }} 页
+            </span>
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">下一页</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}">末页</a>
+            {% endif %}
+        </span>
+    </div>
 {% endblock %}

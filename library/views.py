@@ -5,6 +5,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
+from django.core.paginator import Paginator
 
 from .forms import UserForm
 from .models import Book, Borrow
@@ -12,9 +13,19 @@ from .models import Book, Borrow
 
 def home(request):
     books = Book.objects.all()
-    if 'search' in request.GET:
-        books = books.filter(title__icontains=request.GET['search'])
-    return render(request, 'library/home.html', {'books': books})
+    query = request.GET.get('q')
+
+    if query:
+        books = books.filter(title__icontains=query)
+
+    paginator = Paginator(books, 10)  # 每页显示10本书
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'library/home.html', {
+        'page_obj': page_obj,
+        'query': query,
+    })
 
 
 def book_detail(request, book_id):
@@ -46,12 +57,31 @@ def borrow_books(request):
 @login_required
 def borrow_records(request):
     user = request.user
+    query = request.GET.get('q')
+    status_filter = request.GET.get('status')
+
+    borrows = Borrow.objects.filter(user=user)
+
+    if query:
+        borrows = borrows.filter(book__title__icontains=query)
+
+    if status_filter:
+        borrows = borrows.filter(is_returned=status_filter)
+
+    paginator = Paginator(borrows, 10)  # 每页显示10条记录
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     if request.method == 'POST':
         borrow_ids = request.POST.getlist('return_books')
         Borrow.objects.filter(id__in=borrow_ids).update(is_returned=1, return_date=timezone.now())
         return redirect('borrow_records')
-    borrows = Borrow.objects.filter(user=user)
-    return render(request, 'library/borrow_records.html', {'borrows': borrows})
+
+    return render(request, 'library/borrow_records.html', {
+        'page_obj': page_obj,
+        'query': query,
+        'status_filter': status_filter,
+    })
 
 
 @login_required
