@@ -49,8 +49,8 @@
     </nav>
     <script>
         document.getElementById('select-all').onclick = function() {
-            var checkboxes = document.getElementsByName('borrow_books');
-            for (var checkbox of checkboxes) {
+            const checkboxes = document.getElementsByName('borrow_books');
+            for (const checkbox of checkboxes) {
                 checkbox.checked = this.checked;
             }
         }
