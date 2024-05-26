@@ -1,0 +1,11 @@
+{% extends 'library/base.html' %}
+
+{% block content %}
+    <h1>用户详情</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">保存修改</button>
+    </form>
+    <p class="mt-4"><a href="{% url 'borrow_records' %}">查看我的借阅记录</a></p>
+{% endblock %}

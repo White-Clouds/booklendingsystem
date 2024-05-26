@@ -5,27 +5,31 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 # 导入当前应用的模型
 from .models import User, Book, Borrow
 
+admin.site.site_header = "图书借阅系统"
+admin.site.site_title = "图书借阅系统"
+admin.site.index_title = "欢迎使用图书借阅系统"
+
 
 # 定义UserAdmin类，继承自BaseUserAdmin
 class UserAdmin(BaseUserAdmin):
     # 定义在admin界面列表中显示的字段
-    list_display = ('username', 'email', 'phone', 'is_admin')
+    list_display = ('username', 'email', 'is_admin')
     # 定义在admin界面右侧的过滤器
     list_filter = ('is_admin',)
     # 定义在admin界面编辑页面的字段组
     fieldsets = (
-        (None, {'fields': ('username', 'email', 'phone', 'password')}),
+        (None, {'fields': ('username', 'email', 'password')}),
         ('Permissions', {'fields': ('is_admin', 'is_staff', 'is_superuser')}),
     )
     # 定义在admin界面添加用户页面的字段组
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('username', 'email', 'phone', 'password1', 'password2'),
+            'fields': ('username', 'email', 'password1', 'password2'),
         }),
     )
     # 定义在admin界面的搜索字段
-    search_fields = ('username', 'email', 'phone')
+    search_fields = ('username', 'email')
     # 定义在admin界面的排序字段
     ordering = ('username',)
     # 定义在admin界面的多对多字段的水平滚动条
@@ -46,6 +50,14 @@ class BookAdmin(admin.ModelAdmin):
             'fields': ('title', 'author', 'publisher', 'isbn', 'published_year')
         }),
     )
+
+    def changelist_view(self, request, extra_context=None):
+        # 获取图书的总数
+        total_books = Book.objects.count()
+        # 将统计数据添加到上下文中
+        extra_context = extra_context or {'total_books': total_books}
+        # 调用父类的方法，将新的上下文传递给它
+        return super().changelist_view(request, extra_context=extra_context)
 
 
 # 定义BorrowAdmin类，继承自admin.ModelAdmin

@@ -1,0 +1,14 @@
+{% extends 'library/base.html' %}
+
+{% block content %}
+    <h1>{{ book.title }}</h1>
+    <p><strong>作者：</strong> {{ book.author }}</p>
+    <p><strong>出版社：</strong> {{ book.publisher }}</p>
+    <p><strong>ISBN：</strong> {{ book.isbn }}</p>
+    <p><strong>出版年份：</strong> {{ book.published_year }}</p>
+    {% if user.is_authenticated %}
+        <a href="{% url 'borrow_book' book.id %}" class="btn btn-success">借阅</a>
+    {% else %}
+        <p><a href="{% url 'login' %}">登录</a>以借阅此书。</p>
+    {% endif %}
+{% endblock %}
