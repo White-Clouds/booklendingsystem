@@ -69,11 +69,11 @@ def borrow_book(request, book_id):
             defaults={'due_date': request.POST['due_date']}
         )
         if created:
-            messages.success(request, f'成功借阅《{book.title}》！')
+            messages.success(request, f'您已成功借阅《{book.title}》！')
         else:
             borrow.due_date = request.POST['due_date']
             borrow.save()
-            messages.info(request, f'已更新《{book.title}》的到期时间！')
+            messages.info(request, f'您已更新《{book.title}》的到期时间！')
         return redirect('borrow_records')
     return render(request, 'library/borrow_book.html', {'book': book})
 
@@ -83,7 +83,7 @@ def login_required_message(function):
         if request.user.is_authenticated:
             return function(request, *args, **kwargs)
         else:
-            messages.error(request, '请先登录！')
+            messages.error(request, '进行借阅操作前请先登录！')
             return redirect('home')
 
     return wrap
@@ -105,11 +105,11 @@ def borrow_books(request):
                 defaults={'due_date': timezone.now().date() + timedelta(days=days)}
             )
             if created:
-                messages.success(request, f'成功借阅《{book.title}》！')
+                messages.success(request, f'您已成功借阅《{book.title}》！')
             else:
                 borrow.due_date = timezone.now().date() + timedelta(days=days)
                 borrow.save()
-                messages.info(request, f'已更新《{book.title}》的到期时间！')
+                messages.info(request, f'您已更新《{book.title}》的到期时间！')
 
         return redirect('borrow_records')
     return redirect('home')
@@ -138,7 +138,7 @@ def borrow_records(request):
         Borrow.objects.filter(id__in=borrow_ids).update(is_returned=1, return_date=timezone.now())
         for borrow_id in borrow_ids:
             borrow = Borrow.objects.get(id=borrow_id)
-            messages.success(request, f'成功归还《{borrow.book.title}》！')
+            messages.success(request, f'您已成功归还《{borrow.book.title}》！')
         return redirect('borrow_records')
 
     return render(request, 'library/borrow_records.html', {
@@ -158,7 +158,7 @@ def user_detail(request):
             messages.success(request, '用户信息更新成功！')
             return redirect('user_detail')
         else:
-            messages.error(request, '更新用户信息时出错。')
+            messages.error(request, '用户信息更新失败，请检查邮箱地址是否正确。')
     else:
         form = UserForm(instance=user)
     return render(request, 'library/user_detail.html', {'form': form})
@@ -171,10 +171,10 @@ def change_password(request):
         if form.is_valid():
             user = form.save()
             update_session_auth_hash(request, user)
-            messages.success(request, '密码更改成功！')
+            messages.success(request, '密码更改成功！即将返回用户详情页。')
             return redirect('user_detail')
         else:
-            messages.error(request, '更改密码时出错。')
+            messages.error(request, '密码更改失败，请检查密码是否符合要求。')
     else:
         form = PasswordChangeForm(request.user)
     return render(request, 'library/change_password.html', {'form': form})
@@ -186,9 +186,9 @@ def register_view(request):
         if form.is_valid():
             user = form.save()
             auth_login(request, user)
-            return JsonResponse({'success': True, 'message': '注册成功！'})
+            return JsonResponse({'success': True, 'message': '注册成功！将为您自动登录。'})
         else:
-            return JsonResponse({'success': False, 'message': '注册失败，请检查表单信息。'})
+            return JsonResponse({'success': False, 'message': '注册失败，请检查填写的信息是否正确。'})
     else:
         form = CustomUserCreationForm()
     return render(request, 'library/register_form.html', {'form': form})
