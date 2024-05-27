@@ -55,7 +55,18 @@ def borrow_book(request, book_id):
     return render(request, 'library/borrow_book.html', {'book': book})
 
 
-@login_required
+def login_required_message(function):
+    def wrap(request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return function(request, *args, **kwargs)
+        else:
+            messages.error(request, '请先登录！')
+            return redirect('home')
+
+    return wrap
+
+
+@login_required_message
 def borrow_books(request):
     if request.method == 'POST':
         book_ids = request.POST.getlist('borrow_books')
