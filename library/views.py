@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -19,6 +20,10 @@ def home(request):
 
     if query:
         books = books.filter(title__icontains=query)
+        if books.exists():
+            messages.success(request, f'找到 {books.count()} 本书籍与"{query}"相关！')
+        else:
+            messages.info(request, f'没有找到与"{query}"相关的书籍。')
 
     paginator = Paginator(books, 10)
     page_number = request.GET.get('page')
@@ -30,16 +35,22 @@ def home(request):
     })
 
 
-def book_detail(request, book_id):
-    book = get_object_or_404(Book, pk=book_id)
-    return render(request, 'library/book_detail.html', {'book': book})
-
-
 @login_required
 def borrow_book(request, book_id):
     book = get_object_or_404(Book, pk=book_id)
     if request.method == 'POST':
-        Borrow.objects.create(user=request.user, book=book, due_date=request.POST['due_date'])
+        borrow, created = Borrow.objects.get_or_create(
+            user=request.user,
+            book=book,
+            is_returned=0,
+            defaults={'due_date': request.POST['due_date']}
+        )
+        if created:
+            messages.success(request, f'成功借阅《{book.title}》！')
+        else:
+            borrow.due_date = request.POST['due_date']
+            borrow.save()
+            messages.info(request, f'已更新《{book.title}》的到期时间！')
         return redirect('borrow_records')
     return render(request, 'library/borrow_book.html', {'book': book})
 
@@ -59,9 +70,12 @@ def borrow_books(request):
                 is_returned=0,
                 defaults={'due_date': timezone.now().date() + timedelta(days=days)}
             )
-            if not created:
+            if created:
+                messages.success(request, f'成功借阅《{book.title}》！')
+            else:
                 borrow.due_date = timezone.now().date() + timedelta(days=days)
                 borrow.save()
+                messages.info(request, f'已更新《{book.title}》的到期时间！')
 
         return redirect('borrow_records')
     return redirect('home')
@@ -88,6 +102,9 @@ def borrow_records(request):
     if request.method == 'POST':
         borrow_ids = request.POST.getlist('return_books')
         Borrow.objects.filter(id__in=borrow_ids).update(is_returned=1, return_date=timezone.now())
+        for borrow_id in borrow_ids:
+            borrow = Borrow.objects.get(id=borrow_id)
+            messages.success(request, f'成功归还《{borrow.book.title}》！')
         return redirect('borrow_records')
 
     return render(request, 'library/borrow_records.html', {
@@ -104,11 +121,13 @@ def user_detail(request):
         form = UserForm(request.POST, instance=user)
         if form.is_valid():
             form.save()
+            messages.success(request, '用户信息更新成功！')
             return redirect('user_detail')
+        else:
+            messages.error(request, '更新用户信息时出错。')
     else:
         form = UserForm(instance=user)
-    borrows = Borrow.objects.filter(user=user)
-    return render(request, 'library/user_detail.html', {'form': form, 'borrows': borrows})
+    return render(request, 'library/user_detail.html', {'form': form})
 
 
 @login_required
@@ -118,7 +137,10 @@ def change_password(request):
         if form.is_valid():
             user = form.save()
             update_session_auth_hash(request, user)
+            messages.success(request, '密码更改成功！')
             return redirect('user_detail')
+        else:
+            messages.error(request, '更改密码时出错。')
     else:
         form = PasswordChangeForm(request.user)
     return render(request, 'library/change_password.html', {'form': form})
@@ -130,7 +152,10 @@ def register(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
+            messages.success(request, '注册成功，欢迎加入！')
             return redirect('home')
+        else:
+            messages.error(request, '注册时出错。')
     else:
         form = UserCreationForm()
     return render(request, 'library/register.html', {'form': form})

@@ -7,6 +7,14 @@
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.2/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
+    <style>
+        .toast-container {
+            position: absolute;
+            top: 70px;
+            right: 20px;
+            z-index: 1050;
+        }
+    </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -33,9 +41,32 @@
         </ul>
     </div>
 </nav>
+<div class="toast-container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay="3000">
+                <div class="toast-header">
+                    <strong class="mr-auto">{{ message.tags }}</strong>
+                    <small class="text-muted">刚刚</small>
+                    <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="toast-body">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
 <div class="container mt-4">
     {% block content %}
     {% endblock %}
 </div>
+<script>
+    $(document).ready(function () {
+        $('.toast').toast('show');
+    });
+</script>
 </body>
 </html>

@@ -129,3 +129,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGOUT_REDIRECT_URL = '/'
 
 LOGIN_REDIRECT_URL = '/'
+
+# Optional: Customize the message tags to match Bootstrap classes
+from django.contrib.messages import constants as message_constants
+
+MESSAGE_TAGS = {
+    message_constants.DEBUG: '调试',
+    message_constants.INFO: '消息',
+    message_constants.SUCCESS: '成功',
+    message_constants.WARNING: '警告',
+    message_constants.ERROR: '错误',
+}
