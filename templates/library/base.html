@@ -35,8 +35,10 @@
                     <a class="nav-link" href="#" onclick="document.getElementById('logout-form').submit();">登出</a>
                 </li>
             {% else %}
-                <li class="nav-item"><a class="nav-link" href="#" data-toggle="modal" data-target="#loginModal">登录</a></li>
-                <li class="nav-item"><a class="nav-link" href="#" data-toggle="modal" data-target="#registerModal">注册</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-toggle="modal" data-target="#loginModal">登录</a>
+                </li>
+                <li class="nav-item"><a class="nav-link" href="#" data-toggle="modal"
+                                        data-target="#registerModal">注册</a></li>
             {% endif %}
         </ul>
     </div>
@@ -101,7 +103,7 @@
 <script>
     $(document).ready(function () {
         $('.toast').toast('show');
-        
+
         $('#loginModal').on('hidden.bs.modal', function () {
             if ($('#registerModal').hasClass('show')) {
                 $('body').addClass('modal-open');
@@ -113,7 +115,7 @@
                 $('body').addClass('modal-open');
             }
         });
-        
+
         $('#loginModal form').on('submit', function (event) {
             event.preventDefault();
             var $form = $(this);
@@ -130,7 +132,7 @@
                 }
             });
         });
-        
+
         $('#registerModal form').on('submit', function (event) {
             event.preventDefault();
             var $form = $(this);

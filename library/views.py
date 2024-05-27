@@ -48,7 +48,7 @@ def login_view(request):
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 auth_login(request, user)
-                return JsonResponse({'success': True})
+                return JsonResponse({'success': True, 'message': '登录成功！'})
             else:
                 return JsonResponse({'success': False, 'message': '用户名或密码错误！'})
         else:
