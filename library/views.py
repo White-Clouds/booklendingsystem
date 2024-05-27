@@ -1,17 +1,21 @@
 from datetime import timedelta
 
 from django.contrib import messages
-from django.contrib.auth import login
+from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import get_user_model
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.forms import PasswordChangeForm
-from django.contrib.auth.forms import UserCreationForm
 from django.core.paginator import Paginator
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 
-from .forms import UserForm
+from .forms import UserForm, CustomUserCreationForm
 from .models import Book, Borrow
+
+User = get_user_model()
 
 
 def home(request):
@@ -33,6 +37,25 @@ def home(request):
         'page_obj': page_obj,
         'query': query,
     })
+
+
+def login_view(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                auth_login(request, user)
+                return JsonResponse({'success': True})
+            else:
+                return JsonResponse({'success': False, 'message': '用户名或密码错误！'})
+        else:
+            return JsonResponse({'success': False, 'message': '用户名或密码错误！'})
+    else:
+        form = AuthenticationForm()
+    return render(request, 'library/login_form.html', {'form': form})
 
 
 @login_required
@@ -157,16 +180,15 @@ def change_password(request):
     return render(request, 'library/change_password.html', {'form': form})
 
 
-def register(request):
+def register_view(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)
-            messages.success(request, '注册成功，欢迎加入！')
-            return redirect('home')
+            auth_login(request, user)
+            return JsonResponse({'success': True, 'message': '注册成功！'})
         else:
-            messages.error(request, '注册时出错。')
+            return JsonResponse({'success': False, 'message': '注册失败，请检查表单信息。'})
     else:
-        form = UserCreationForm()
-    return render(request, 'library/register.html', {'form': form})
+        form = CustomUserCreationForm()
+    return render(request, 'library/register_form.html', {'form': form})

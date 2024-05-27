@@ -1,5 +1,9 @@
 from django import forms
+from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+
+MyUser = get_user_model()
 
 
 class UserForm(forms.ModelForm):
@@ -21,3 +25,11 @@ class UserForm(forms.ModelForm):
         widgets = {
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
         }
+
+
+class CustomUserCreationForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+
+    class Meta:
+        model = MyUser
+        fields = ('username', 'email', 'password1', 'password2')
