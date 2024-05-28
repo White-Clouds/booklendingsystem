@@ -9,6 +9,10 @@
             <input type="text" id="username" class="form-control" value="{{ user.username }}" disabled>
         </div>
         <div class="mb-3">
+            <label for="last_login" class="form-label">上次登录日期</label>
+            <input type="text" id="last_login" class="form-control" value="{{ user.last_login }}" disabled>
+        </div>
+        <div class="mb-3">
             <label for="email" class="form-label">邮箱</label>
             <input type="email" id="email" name="email" class="form-control" value="{{ user.email }}">
         </div>

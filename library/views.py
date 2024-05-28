@@ -8,7 +8,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.forms import PasswordChangeForm
 from django.core.paginator import Paginator
-from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 
@@ -48,14 +47,42 @@ def login_view(request):
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 auth_login(request, user)
-                return JsonResponse({'success': True, 'message': '登录成功！'})
+                messages.success(request, '登录成功！')
+                return redirect('home')
             else:
-                return JsonResponse({'success': False, 'message': '用户名或密码错误！'})
+                messages.error(request, '用户名或密码错误！')
+                return redirect('home')
         else:
-            return JsonResponse({'success': False, 'message': '用户名或密码错误！'})
+            messages.error(request, '用户名或密码错误！')
+            return redirect('home')
     else:
         form = AuthenticationForm()
     return render(request, 'library/login_form.html', {'form': form})
+
+
+def login_required_message(function):
+    def wrap(request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return function(request, *args, **kwargs)
+        else:
+            messages.error(request, '进行借阅操作前请先登录！')
+            return redirect('home')
+
+    return wrap
+
+
+def register_view(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            auth_login(request, user)
+            messages.success(request, '注册成功！将为您自动登录。')
+        else:
+            messages.error(request, '注册失败，请检查填写的信息是否正确。')
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'library/register_form.html', {'form': form})
 
 
 @login_required
@@ -76,17 +103,6 @@ def borrow_book(request, book_id):
             messages.info(request, f'您已更新《{book.title}》的到期时间！')
         return redirect('borrow_records')
     return render(request, 'library/borrow_book.html', {'book': book})
-
-
-def login_required_message(function):
-    def wrap(request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return function(request, *args, **kwargs)
-        else:
-            messages.error(request, '进行借阅操作前请先登录！')
-            return redirect('home')
-
-    return wrap
 
 
 @login_required_message
@@ -125,6 +141,10 @@ def borrow_records(request):
 
     if query:
         borrows = borrows.filter(book__title__icontains=query)
+        if borrows.exists():
+            messages.success(request, f'找到 {borrows.count()} 条借阅记录与"{query}"相关！')
+        else:
+            messages.info(request, f'没有找到与"{query}"相关的借阅记录。')
 
     if status_filter:
         borrows = borrows.filter(is_returned=status_filter)
@@ -178,17 +198,3 @@ def change_password(request):
     else:
         form = PasswordChangeForm(request.user)
     return render(request, 'library/change_password.html', {'form': form})
-
-
-def register_view(request):
-    if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            auth_login(request, user)
-            return JsonResponse({'success': True, 'message': '注册成功！将为您自动登录。'})
-        else:
-            return JsonResponse({'success': False, 'message': '注册失败，请检查填写的信息是否正确。'})
-    else:
-        form = CustomUserCreationForm()
-    return render(request, 'library/register_form.html', {'form': form})
