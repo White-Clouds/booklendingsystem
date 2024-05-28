@@ -9,8 +9,9 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
 from pathlib import Path
+
+from django.contrib.messages import constants as message_constants
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -78,7 +79,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'library',
-        'USER': 'root',
+        'USER': 'library',
         'PASSWORD': '123456',
         'HOST': 'localhost',
         'PORT': '3307',
@@ -131,8 +132,6 @@ LOGOUT_REDIRECT_URL = '/'
 LOGIN_REDIRECT_URL = '/'
 
 # Optional: Customize the message tags to match Bootstrap classes
-from django.contrib.messages import constants as message_constants
-
 MESSAGE_TAGS = {
     message_constants.DEBUG: '调试',
     message_constants.INFO: '消息',
