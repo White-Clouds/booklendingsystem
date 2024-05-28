@@ -191,10 +191,10 @@ def change_password(request):
         if form.is_valid():
             user = form.save()
             update_session_auth_hash(request, user)
-            messages.success(request, '密码更改成功！即将返回用户详情页。')
+            messages.success(request, '密码更改成功！返回用户详情页。')
             return redirect('user_detail')
         else:
-            messages.error(request, '密码更改失败，请检查密码是否符合要求。')
+            messages.error(request, '密码更改失败，请检查表单是否符合要求。')
     else:
         form = PasswordChangeForm(request.user)
     return render(request, 'library/change_password.html', {'form': form})
