@@ -6,7 +6,7 @@
         <input type="text" name="q" class="form-control mr-2" placeholder="搜索书名" value="{{ query }}">
         <button type="submit" class="btn btn-primary">搜索</button>
     </form>
-    <form method="post" action="{% url 'borrow_books' %}">
+    <form method="post" action="{% url 'borrow_book_main' %}">
         {% csrf_token %}
         <table class="table table-striped">
             <thead>
@@ -21,7 +21,7 @@
             <tbody>
             {% for book in page_obj %}
                 <tr>
-                    <td><input type="checkbox" name="borrow_books" value="{{ book.id }}"></td>
+                    <td><input type="checkbox" name="borrow_book_main" value="{{ book.id }}"></td>
                     <td>{{ book.title }}</td>
                     <td>{{ book.author }}</td>
                     <td>{{ book.published_year }}</td>
@@ -63,7 +63,7 @@
     </nav>
     <script>
         document.getElementById('select-all').onclick = function () {
-            const checkboxes = document.getElementsByName('borrow_books');
+            const checkboxes = document.getElementsByName('borrow_book_main');
             for (const checkbox of checkboxes) {
                 checkbox.checked = this.checked;
             }

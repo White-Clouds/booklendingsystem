@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.forms import PasswordChangeForm
 from django.core.paginator import Paginator
+from django.http import Http404
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 
@@ -48,13 +49,13 @@ def login_view(request):
             if user is not None:
                 auth_login(request, user)
                 messages.success(request, '登录成功！')
-                return redirect('home')
+                return redirect(request.META.get('HTTP_REFERER', 'home'))
             else:
                 messages.error(request, '用户名或密码错误！')
-                return redirect('home')
+                return redirect(request.META.get('HTTP_REFERER', 'home'))
         else:
             messages.error(request, '用户名或密码错误！')
-            return redirect('home')
+            return redirect(request.META.get('HTTP_REFERER', 'home'))
     else:
         form = AuthenticationForm()
     return render(request, 'library/login_form.html', {'form': form})
@@ -66,7 +67,7 @@ def login_required_message(function):
             return function(request, *args, **kwargs)
         else:
             messages.error(request, '进行借阅操作前请先登录！')
-            return redirect('home')
+            return redirect(request.META.get('HTTP_REFERER', 'home'))
 
     return wrap
 
@@ -78,37 +79,51 @@ def register_view(request):
             user = form.save()
             auth_login(request, user)
             messages.success(request, '注册成功！将为您自动登录。')
+            return redirect(request.META.get('HTTP_REFERER', 'home'))
         else:
             messages.error(request, '注册失败，请检查填写的信息是否正确。')
+            return redirect(request.META.get('HTTP_REFERER', 'home'))
     else:
         form = CustomUserCreationForm()
     return render(request, 'library/register_form.html', {'form': form})
+
+
+def book_detail(request, book_id):
+    try:
+        book = get_object_or_404(Book, pk=book_id)
+    except Http404:
+        messages.error(request, '书籍不存在或已被删除。')
+        return redirect('home')
+    return render(request, 'library/book_detail.html', {'book': book})
 
 
 @login_required
 def borrow_book(request, book_id):
     book = get_object_or_404(Book, pk=book_id)
     if request.method == 'POST':
+        days = int(request.POST.get('days', 7))
+        days = min(max(days, 1), 30)
+
         borrow, created = Borrow.objects.get_or_create(
             user=request.user,
             book=book,
-            is_returned=0,
-            defaults={'due_date': request.POST['due_date']}
+            is_returned=False,
+            defaults={'due_date': timezone.now().date() + timedelta(days=days)}
         )
         if created:
             messages.success(request, f'您已成功借阅《{book.title}》！')
         else:
-            borrow.due_date = request.POST['due_date']
+            borrow.due_date = timezone.now().date() + timedelta(days=days)
             borrow.save()
             messages.info(request, f'您已更新《{book.title}》的到期时间！')
         return redirect('borrow_records')
-    return render(request, 'library/borrow_book.html', {'book': book})
+    return render(request, 'library/book_detail.html', {'book': book})
 
 
 @login_required_message
-def borrow_books(request):
+def borrow_book_main(request):
     if request.method == 'POST':
-        book_ids = request.POST.getlist('borrow_books')
+        book_ids = request.POST.getlist('borrow_book_main')
         days = int(request.POST.get('days', 7))
         days = min(max(days, 1), 30)
 
@@ -126,9 +141,8 @@ def borrow_books(request):
                 borrow.due_date = timezone.now().date() + timedelta(days=days)
                 borrow.save()
                 messages.info(request, f'您已更新《{book.title}》的到期时间！')
-
         return redirect('borrow_records')
-    return redirect('home')
+    return redirect(request.META.get('HTTP_REFERER', 'home'))
 
 
 @login_required
