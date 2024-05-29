@@ -19,7 +19,7 @@ User = get_user_model()
 
 def home(request):
     books = Book.objects.all().order_by('id')
-    query = request.GET.get('q')
+    query = request.GET.get('q', '')
 
     if query:
         books = books.filter(title__icontains=query)
@@ -134,10 +134,10 @@ def borrow_books(request):
 @login_required
 def borrow_records(request):
     user = request.user
-    query = request.GET.get('q')
+    query = request.GET.get('q', '')
     status_filter = request.GET.get('status')
 
-    borrows = Borrow.objects.filter(user=user).order_by('id')
+    borrows = Borrow.objects.filter(user=user).order_by('is_returned', 'id')
 
     if query:
         borrows = borrows.filter(book__title__icontains=query)
@@ -155,10 +155,15 @@ def borrow_records(request):
 
     if request.method == 'POST':
         borrow_ids = request.POST.getlist('return_books')
-        Borrow.objects.filter(id__in=borrow_ids).update(is_returned=1, return_date=timezone.now())
         for borrow_id in borrow_ids:
             borrow = Borrow.objects.get(id=borrow_id)
-            messages.success(request, f'您已成功归还《{borrow.book.title}》！')
+            if borrow.is_returned:
+                messages.warning(request, f'书籍《{borrow.book.title}》已于 {borrow.return_date} 归还')
+            else:
+                borrow.is_returned = True
+                borrow.return_date = timezone.now()
+                borrow.save()
+                messages.success(request, f'成功归还书籍《{borrow.book.title}》')
         return redirect('borrow_records')
 
     return render(request, 'library/borrow_records.html', {
