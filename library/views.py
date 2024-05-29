@@ -169,15 +169,31 @@ def borrow_records(request):
 
     if request.method == 'POST':
         borrow_ids = request.POST.getlist('return_books')
-        for borrow_id in borrow_ids:
-            borrow = Borrow.objects.get(id=borrow_id)
+
+        if not borrow_ids:
+            messages.warning(request, '未选择任何书籍。')
+            return redirect('borrow_records')
+
+        borrows_to_return = Borrow.objects.filter(id__in=borrow_ids, user=user)
+        already_returned = set()
+        to_update = set()
+
+        for borrow in borrows_to_return:
             if borrow.is_returned:
-                messages.warning(request, f'书籍《{borrow.book.title}》已于 {borrow.return_date} 归还')
+                already_returned.add(borrow)
             else:
                 borrow.is_returned = True
                 borrow.return_date = timezone.now()
-                borrow.save()
+                to_update.add(borrow)
+
+        if to_update:
+            Borrow.objects.bulk_update(to_update, ['is_returned', 'return_date'])
+            for borrow in to_update:
                 messages.success(request, f'成功归还书籍《{borrow.book.title}》')
+
+        for borrow in already_returned:
+            messages.warning(request, f'书籍《{borrow.book.title}》已于 {borrow.return_date} 归还')
+
         return redirect('borrow_records')
 
     return render(request, 'library/borrow_records.html', {
