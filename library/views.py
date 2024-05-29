@@ -2,12 +2,11 @@ from datetime import timedelta
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login
-from django.contrib.auth import get_user_model
-from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.http import Http404
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
@@ -27,7 +26,7 @@ def home(request):
         if books.exists():
             messages.success(request, f'找到 {books.count()} 本书籍与"{query}"相关！')
         else:
-            messages.info(request, f'没有找到与"{query}"相关的书籍。')
+            messages.warning(request, f'没有找到与"{query}"相关的书籍。')
 
     paginator = Paginator(books, 10)
     page_number = request.GET.get('page')
@@ -66,7 +65,7 @@ def login_required_message(function):
         if request.user.is_authenticated:
             return function(request, *args, **kwargs)
         else:
-            messages.error(request, '进行借阅操作前请先登录！')
+            messages.info(request, '进行借阅操作前请先登录！')
             return redirect(request.META.get('HTTP_REFERER', 'home'))
 
     return wrap
@@ -100,23 +99,31 @@ def book_detail(request, book_id):
 @login_required
 def borrow_book(request, book_id):
     book = get_object_or_404(Book, pk=book_id)
+
     if request.method == 'POST':
         days = int(request.POST.get('days', 7))
         days = min(max(days, 1), 30)
+        due_date = timezone.now().date() + timedelta(days=days)
 
         borrow, created = Borrow.objects.get_or_create(
             user=request.user,
             book=book,
             is_returned=False,
-            defaults={'due_date': timezone.now().date() + timedelta(days=days)}
+            defaults={'due_date': due_date}
         )
+
         if created:
             messages.success(request, f'您已成功借阅《{book.title}》！')
         else:
-            borrow.due_date = timezone.now().date() + timedelta(days=days)
-            borrow.save()
-            messages.info(request, f'您已更新《{book.title}》的到期时间！')
+            if borrow.due_date != due_date:
+                borrow.due_date = due_date
+                borrow.save(update_fields=['due_date'])
+                messages.info(request, f'您已更新《{book.title}》的到期时间！')
+            else:
+                messages.info(request, f'您已经借阅了《{book.title}》，到期时间未改变。')
+
         return redirect('borrow_records')
+
     return render(request, 'library/book_detail.html', {'book': book})
 
 
@@ -126,22 +133,41 @@ def borrow_book_main(request):
         book_ids = request.POST.getlist('borrow_book_main')
         days = int(request.POST.get('days', 7))
         days = min(max(days, 1), 30)
+        due_date = timezone.now().date() + timedelta(days=days)
 
-        for book_id in book_ids:
-            book = get_object_or_404(Book, id=book_id)
-            borrow, created = Borrow.objects.get_or_create(
-                user=request.user,
-                book=book,
-                is_returned=0,
-                defaults={'due_date': timezone.now().date() + timedelta(days=days)}
-            )
-            if created:
-                messages.success(request, f'您已成功借阅《{book.title}》！')
-            else:
-                borrow.due_date = timezone.now().date() + timedelta(days=days)
-                borrow.save()
-                messages.info(request, f'您已更新《{book.title}》的到期时间！')
+        books = Book.objects.filter(id__in=book_ids)
+        borrows_to_update = set()
+        messages_created = set()
+
+        with transaction.atomic():
+            for book in books:
+                borrow, created = Borrow.objects.get_or_create(
+                    user=request.user,
+                    book=book,
+                    is_returned=0,
+                    defaults={'due_date': due_date}
+                )
+                if created:
+                    if book.id not in messages_created:
+                        messages.success(request, f'您已成功借阅《{book.title}》！')
+                        messages_created.add(book.id)
+                else:
+                    if borrow.due_date != due_date:
+                        borrow.due_date = due_date
+                        borrows_to_update.add(borrow)
+                        if book.id not in messages_created:
+                            messages.info(request, f'您已更新《{book.title}》的到期时间！')
+                            messages_created.add(book.id)
+                    else:
+                        if book.id not in messages_created:
+                            messages.info(request, f'您已经借阅了《{book.title}》，到期时间未改变。')
+                            messages_created.add(book.id)
+
+            if borrows_to_update:
+                Borrow.objects.bulk_update(borrows_to_update, ['due_date'])
+
         return redirect('borrow_records')
+
     return redirect(request.META.get('HTTP_REFERER', 'home'))
 
 
