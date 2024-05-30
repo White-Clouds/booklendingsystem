@@ -10,13 +10,36 @@
         {% csrf_token %}
         <table class="table table-striped">
             <thead>
-            <tr>
+            <tr class="sort-buttons">
                 <th scope="col"><input type="checkbox" id="select-all"></th>
-                <th scope="col">书名</th>
-                <th scope="col">作者</th>
-                <th scope="col">出版日期</th>
-                <th scope="col">ISBN</th>
-            </tr>
+                <th scope="col">
+                    书名
+                    <a href="?page={{ page_obj.number }}&sort=title" class="sort-up"><i
+                            class="fa-solid fa-arrow-up-long"></i></a>
+                    <a href="?page={{ page_obj.number }}&sort=-title" class="sort-down"><i
+                            class="fa-solid fa-arrow-down-long"></i></a>
+                </th>
+                <th scope="col">
+                    作者
+                    <a href="?page={{ page_obj.number }}&sort=author" class="sort-up"><i
+                            class="fa-solid fa-arrow-up-long"></i></a>
+                    <a href="?page={{ page_obj.number }}&sort=-author" class="sort-down"><i
+                            class="fa-solid fa-arrow-down-long"></i></a>
+                </th>
+                <th scope="col">
+                    出版日期
+                    <a href="?page={{ page_obj.number }}&sort=published_year" class="sort-up"><i
+                            class="fa-solid fa-arrow-up-long"></i></a>
+                    <a href="?page={{ page_obj.number }}&sort=-published_year" class="sort-down"><i
+                            class="fa-solid fa-arrow-down-long"></i></a>
+                </th>
+                <th scope="col">
+                    ISBN
+                    <a href="?page={{ page_obj.number }}&sort=isbn" class="sort-up"><i
+                            class="fa-solid fa-arrow-up-long"></i></a>
+                    <a href="?page={{ page_obj.number }}&sort=-isbn" class="sort-down"><i
+                            class="fa-solid fa-arrow-down-long"></i></a>
+                </th>
             </thead>
             <tbody>
             {% for book in page_obj %}
@@ -45,15 +68,18 @@
     <nav>
         <ul class="pagination">
             {% if page_obj.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}">首页</a></li>
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">上一页</a></li>
+                <li class="page-item"><a class="page-link"
+                                         href="?page=1&sort={{ sort }}{% if query %}&q={{ query }}{% endif %}">首页</a>
+                </li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&sort=
+                        {{ sort }}{% if query %}&q={{ query }}{% endif %}">上一页</a></li>
             {% endif %}
             <li class="page-item disabled">
                 <span class="page-link">第 {{ page_obj.number }} 页，共 {{ page_obj.paginator.num_pages }} 页</span>
             </li>
             {% if page_obj.has_next %}
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">下一页</a></li>
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}">末页</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&sort={{ sort }}{% if query %}&q={{ query }}{% endif %}">下一页</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&sort={{ sort }}{% if query %}&q={{ query }}{% endif %}">末页</a></li>
             {% endif %}
         </ul>
     </nav>

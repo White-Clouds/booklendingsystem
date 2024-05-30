@@ -10,6 +10,7 @@ from django.db import transaction
 from django.http import Http404
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
+from pypinyin import lazy_pinyin
 
 from .forms import UserForm, CustomUserCreationForm
 from .models import Book, Borrow
@@ -18,15 +19,24 @@ User = get_user_model()
 
 
 def home(request):
-    books = Book.objects.all().order_by('id')
     query = request.GET.get('q', '')
+    sort = request.GET.get('sort', 'id')
 
+    books = Book.objects.all()
     if query:
         books = books.filter(title__icontains=query)
-        if books.exists():
-            messages.success(request, f'找到 {books.count()} 本书籍与"{query}"相关！')
+        count = books.count()
+        if count:
+            messages.success(request, f'找到 {count} 本书籍与"{query}"相关！')
         else:
             messages.warning(request, f'没有找到与"{query}"相关的书籍。')
+
+    if sort in ['title', '-title', 'author', '-author']:
+        reverse = sort.startswith('-')
+        field = sort.lstrip('-')
+        books = sorted(books, key=lambda book: lazy_pinyin(getattr(book, field))[0], reverse=reverse)
+    else:
+        books = books.order_by(sort)
 
     paginator = Paginator(books, 10)
     page_number = request.GET.get('page')
@@ -35,6 +45,7 @@ def home(request):
     return render(request, 'library/home.html', {
         'page_obj': page_obj,
         'query': query,
+        'sort': sort,
     })
 
 
@@ -176,18 +187,24 @@ def borrow_records(request):
     user = request.user
     query = request.GET.get('q', '')
     status_filter = request.GET.get('status')
+    sort = request.GET.get('sort', 'is_returned')
 
-    borrows = Borrow.objects.filter(user=user).order_by('is_returned', 'id')
+    borrows = Borrow.objects.filter(user=user).select_related('book')
 
     if query:
         borrows = borrows.filter(book__title__icontains=query)
-        if borrows.exists():
-            messages.success(request, f'找到 {borrows.count()} 条借阅记录与"{query}"相关！')
-        else:
-            messages.info(request, f'没有找到与"{query}"相关的借阅记录。')
+        messages.success(request,
+                         f'找到 {borrows.count()} 条借阅记录与"{query}"相关！' if borrows.exists() else f'没有找到与"{query}"相关的借阅记录。')
 
     if status_filter:
         borrows = borrows.filter(is_returned=status_filter)
+
+    if sort in ['borrow_date', '-borrow_date', 'due_date', '-due_date', 'return_date', '-return_date', 'is_returned',
+                '-is_returned']:
+        borrows = borrows.order_by(sort)
+    elif sort in ['title', '-title']:
+        reverse = sort.startswith('-')
+        borrows = sorted(borrows, key=lambda item: lazy_pinyin(item.book.title)[0], reverse=reverse)
 
     paginator = Paginator(borrows, 10)
     page_number = request.GET.get('page')
@@ -197,13 +214,11 @@ def borrow_records(request):
         borrow_ids = request.POST.getlist('return_books')
 
         if not borrow_ids:
-            messages.warning(request, '未选择任何书籍。')
+            messages.warning(request, '未选择任何书籍进行归还。')
             return redirect('borrow_records')
-
         borrows_to_return = Borrow.objects.filter(id__in=borrow_ids, user=user)
         already_returned = set()
         to_update = set()
-
         for borrow in borrows_to_return:
             if borrow.is_returned:
                 already_returned.add(borrow)
@@ -211,12 +226,10 @@ def borrow_records(request):
                 borrow.is_returned = True
                 borrow.return_date = timezone.now()
                 to_update.add(borrow)
-
         if to_update:
-            Borrow.objects.bulk_update(to_update, ['is_returned', 'return_date'])
+            Borrow.objects.bulk_update(list(to_update), ['is_returned', 'return_date'])
             for borrow in to_update:
                 messages.success(request, f'成功归还书籍《{borrow.book.title}》')
-
         for borrow in already_returned:
             messages.warning(request, f'书籍《{borrow.book.title}》已于 {borrow.return_date} 归还')
 
@@ -226,6 +239,7 @@ def borrow_records(request):
         'page_obj': page_obj,
         'query': query,
         'status_filter': status_filter,
+        'sort': sort,
     })
 
 
