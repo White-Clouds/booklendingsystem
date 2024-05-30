@@ -48,13 +48,13 @@ def login_view(request):
             if user is not None:
                 auth_login(request, user)
                 messages.success(request, '登录成功！')
-                return redirect(request.META.get('HTTP_REFERER', 'home'))
+                return redirect(request.meta.get('HTTP_REFERER', 'home'))
             else:
                 messages.error(request, '用户名或密码错误！')
-                return redirect(request.META.get('HTTP_REFERER', 'home'))
+                return redirect(request.meta.get('HTTP_REFERER', 'home'))
         else:
             messages.error(request, '用户名或密码错误！')
-            return redirect(request.META.get('HTTP_REFERER', 'home'))
+            return redirect(request.meta.get('HTTP_REFERER', 'home'))
     else:
         form = AuthenticationForm()
     return render(request, 'library/login_form.html', {'form': form})
@@ -66,7 +66,7 @@ def login_required_message(function):
             return function(request, *args, **kwargs)
         else:
             messages.info(request, '进行借阅操作前请先登录！')
-            return redirect(request.META.get('HTTP_REFERER', 'home'))
+            return redirect(request.meta.get('HTTP_REFERER', 'home'))
 
     return wrap
 
@@ -78,10 +78,10 @@ def register_view(request):
             user = form.save()
             auth_login(request, user)
             messages.success(request, '注册成功！将为您自动登录。')
-            return redirect(request.META.get('HTTP_REFERER', 'home'))
+            return redirect(request.meta.get('HTTP_REFERER', 'home'))
         else:
             messages.error(request, '注册失败，请检查填写的信息是否正确。')
-            return redirect(request.META.get('HTTP_REFERER', 'home'))
+            return redirect(request.meta.get('HTTP_REFERER', 'home'))
     else:
         form = CustomUserCreationForm()
     return render(request, 'library/register_form.html', {'form': form})
@@ -168,7 +168,7 @@ def borrow_book_main(request):
 
         return redirect('borrow_records')
 
-    return redirect(request.META.get('HTTP_REFERER', 'home'))
+    return redirect(request.meta.get('HTTP_REFERER', 'home'))
 
 
 @login_required

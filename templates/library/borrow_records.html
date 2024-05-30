@@ -28,8 +28,7 @@
                 {% for borrow in page_obj %}
                     <tr>
                         <td>
-                            <input type="checkbox" name="return_books" value="{{ borrow.id }}"
-                                   {% if borrow.is_returned %}disabled{% endif %}>
+                            <input type="checkbox" name="return_books" value="{{ borrow.id }}" {% if borrow.is_returned %}disabled{% endif %}>
                         </td>
                         <td>{{ borrow.book.title }}</td>
                         <td>{{ borrow.borrow_date }}</td>
