@@ -27,7 +27,14 @@
                             class="fa-solid fa-arrow-down-long"></i></a>
                 </th>
                 <th scope="col">
-                    出版日期
+                    分类
+                    <a href="?page={{ page_obj.number }}&sort=category" class="sort-up"><i
+                            class="fa-solid fa-arrow-up-long"></i></a>
+                    <a href="?page={{ page_obj.number }}&sort=-category" class="sort-down"><i
+                            class="fa-solid fa-arrow-down-long"></i></a>
+                </th>
+                <th scope="col">
+                    出版年份
                     <a href="?page={{ page_obj.number }}&sort=published_year" class="sort-up"><i
                             class="fa-solid fa-arrow-up-long"></i></a>
                     <a href="?page={{ page_obj.number }}&sort=-published_year" class="sort-down"><i
@@ -40,6 +47,7 @@
                     <a href="?page={{ page_obj.number }}&sort=-isbn" class="sort-down"><i
                             class="fa-solid fa-arrow-down-long"></i></a>
                 </th>
+            </tr>
             </thead>
             <tbody>
             {% for book in page_obj %}
@@ -47,6 +55,7 @@
                     <td><input type="checkbox" name="borrow_book_main" value="{{ book.id }}"></td>
                     <td>{{ book.title }}</td>
                     <td>{{ book.author }}</td>
+                    <td>{{ book.category }}</td>
                     <td>{{ book.published_year }}</td>
                     <td>{{ book.isbn }}</td>
                 </tr>
@@ -68,11 +77,8 @@
     <nav>
         <ul class="pagination">
             {% if page_obj.has_previous %}
-                <li class="page-item"><a class="page-link"
-                                         href="?page=1&sort={{ sort }}{% if query %}&q={{ query }}{% endif %}">首页</a>
-                </li>
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&sort=
-                        {{ sort }}{% if query %}&q={{ query }}{% endif %}">上一页</a></li>
+                <li class="page-item"><a class="page-link" href="?page=1&sort={{ sort }}{% if query %}&q={{ query }}{% endif %}">首页</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&sort={{ sort }}{% if query %}&q={{ query }}{% endif %}">上一页</a></li>
             {% endif %}
             <li class="page-item disabled">
                 <span class="page-link">第 {{ page_obj.number }} 页，共 {{ page_obj.paginator.num_pages }} 页</span>

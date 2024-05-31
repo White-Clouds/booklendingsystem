@@ -2,6 +2,34 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 
 
+# 定义了一个名为Category的模型，代表书籍分类
+class Category(models.Model):
+    # 定义选择范围为A到Z
+    CATEGORY_CHOICES = [(chr(i), chr(i)) for i in range(ord('A'), ord('Z') + 1)]
+    # 分类的代码，只能是A到Z
+    code = models.CharField(max_length=1, choices=CATEGORY_CHOICES, unique=True, verbose_name='分类代码')
+    # 分类的名称，例如文学
+    name = models.CharField(max_length=255, verbose_name='分类名称')
+
+    def __str__(self):
+        # 返回分类名称作为对象的字符串表示
+        return self.name
+
+    class Meta:
+        # 定义数据库表名
+        db_table = 'categories'
+        # 定义模型的可读名称
+        verbose_name = '书籍分类'
+        # 定义模型的可读名称（复数形式）
+        verbose_name_plural = '书籍分类'
+        # 定义模型的约束，这里是设置code字段唯一且限制为A-Z
+        constraints = [
+            models.UniqueConstraint(fields=['code'], name='unique_code')
+        ]
+        # 是否在管理器中显示此模型
+        managed = True
+
+
 # 定义了一个名为Book的模型，代表图书
 class Book(models.Model):
     # 图书的标题，最大长度为255，必须唯一
@@ -10,6 +38,8 @@ class Book(models.Model):
     author = models.CharField(max_length=255, verbose_name='作者')
     # 图书的出版社，最大长度为255
     publisher = models.CharField(max_length=255, verbose_name='出版社')
+    # 图书的分类，外键关联到Category模型
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='分类')
     # 图书的ISBN号，必须唯一
     isbn = models.BigIntegerField(unique=True, verbose_name='ISBN')
     # 图书的出版年份，可以为空

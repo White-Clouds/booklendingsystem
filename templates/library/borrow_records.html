@@ -31,6 +31,13 @@
                        class="sort-down"><i class="fa-solid fa-arrow-down-long"></i></a>
                 </th>
                 <th scope="col">
+                    分类
+                    <a href="?page={{ page_obj.number }}&sort=category{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+                       class="sort-up"><i class="fa-solid fa-arrow-up-long"></i></a>
+                    <a href="?page={{ page_obj.number }}&sort=-category{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+                       class="sort-down"><i class="fa-solid fa-arrow-down-long"></i></a>
+                </th>
+                <th scope="col">
                     借阅日期
                     <a href="?page={{ page_obj.number }}&sort=borrow_date{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}"
                        class="sort-up"><i class="fa-solid fa-arrow-up-long"></i></a>
@@ -66,6 +73,7 @@
                     <td><input type="checkbox" name="return_books" value="{{ borrow.id }}"
                                {% if borrow.is_returned %}disabled{% endif %}></td>
                     <td>{{ borrow.book.title }}</td>
+                    <td>{{ borrow.book.category }}</td>
                     <td>{{ borrow.borrow_date }}</td>
                     <td>{{ borrow.due_date }}</td>
                     <td>{{ borrow.return_date }}</td>

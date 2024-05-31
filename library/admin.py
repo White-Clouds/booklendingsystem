@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 # 导入当前应用的模型
-from .models import User, Book, Borrow
+from .models import User, Book, Borrow, Category
 
 admin.site.site_header = "图书借阅系统"
 admin.site.site_title = "图书借阅系统"
@@ -40,7 +40,7 @@ class UserAdmin(BaseUserAdmin):
 # 定义BookAdmin类，继承自admin.ModelAdmin
 class BookAdmin(admin.ModelAdmin):
     # 定义在admin界面列表中显示的字段
-    list_display = ('title', 'author', 'publisher', 'isbn', 'published_year')
+    list_display = ('title', 'author', 'publisher', 'category', 'isbn', 'published_year')
     # 定义在admin界面的搜索字段
     search_fields = ('title', 'author', 'isbn')
     # 定义在admin界面右侧的过滤器
@@ -48,7 +48,7 @@ class BookAdmin(admin.ModelAdmin):
     # 定义在admin界面编辑页面的字段组
     fieldsets = (
         (None, {
-            'fields': ('title', 'author', 'publisher', 'isbn', 'published_year')
+            'fields': ('title', 'author', 'publisher', 'category', 'isbn', 'published_year')
         }),
     )
 
@@ -77,9 +77,21 @@ class BorrowAdmin(admin.ModelAdmin):
     )
 
 
+# 定义CategoryAdmin类，继承自admin.ModelAdmin
+class CategoryAdmin(admin.ModelAdmin):
+    # 定义在admin界面列表中显示的字段
+    list_display = ('code', 'name')
+    # 定义在admin界面的搜索字段
+    search_fields = ('code', 'name')
+    # 定义在admin界面右侧的过滤器
+    list_filter = ('code',)
+
+
 # 在admin界面注册User模型，使用自定义的UserAdmin类
 admin.site.register(User, UserAdmin)
 # 在admin界面注册Book模型，使用自定义的BookAdmin类
 admin.site.register(Book, BookAdmin)
 # 在admin界面注册Borrow模型，使用自定义的BorrowAdmin类
 admin.site.register(Borrow, BorrowAdmin)
+# 在admin界面注册Category模型，使用自定义的CategoryAdmin类
+admin.site.register(Category, CategoryAdmin)

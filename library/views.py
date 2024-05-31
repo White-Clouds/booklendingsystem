@@ -31,10 +31,14 @@ def home(request):
         else:
             messages.warning(request, f'没有找到与"{query}"相关的书籍。')
 
-    if sort in ['title', '-title', 'author', '-author']:
+    if sort in ['title', '-title', 'author', '-author', 'category', '-category']:
         reverse = sort.startswith('-')
-        field = sort.lstrip('-')
-        books = sorted(books, key=lambda book: lazy_pinyin(getattr(book, field))[0], reverse=reverse)
+        if 'category' in sort:
+            books = sorted(books, key=lambda book: lazy_pinyin(book.category.name if book.category else '')[0],
+                           reverse=reverse)
+        else:
+            field = sort.lstrip('-')
+            books = sorted(books, key=lambda book: lazy_pinyin(getattr(book, field))[0], reverse=reverse)
     else:
         books = books.order_by(sort)
 
@@ -189,7 +193,7 @@ def borrow_records(request):
     status_filter = request.GET.get('status')
     sort = request.GET.get('sort', 'is_returned')
 
-    borrows = Borrow.objects.filter(user=user).select_related('book')
+    borrows = Borrow.objects.filter(user=user).select_related('book', 'book__category')
 
     if query:
         borrows = borrows.filter(book__title__icontains=query)
@@ -210,6 +214,9 @@ def borrow_records(request):
     elif sort in ['title', '-title']:
         reverse = sort.startswith('-')
         borrows = sorted(borrows, key=lambda item: lazy_pinyin(item.book.title)[0], reverse=reverse)
+    elif sort in ['category', '-category']:
+        reverse = sort.startswith('-')
+        borrows = sorted(borrows, key=lambda item: lazy_pinyin(item.book.category.name if item.book and item.book.category else '')[0], reverse=reverse)
     else:
         borrows = borrows.order_by('is_returned', 'id')
 
