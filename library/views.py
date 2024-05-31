@@ -59,13 +59,13 @@ def login_view(request):
             if user is not None:
                 auth_login(request, user)
                 messages.success(request, '登录成功！')
-                return redirect(request.meta.get('HTTP_REFERER', 'home'))
+                return redirect(request.META.get('HTTP_REFERER', 'home'))
             else:
                 messages.error(request, '用户名或密码错误！')
-                return redirect(request.meta.get('HTTP_REFERER', 'home'))
+                return redirect(request.META.get('HTTP_REFERER', 'home'))
         else:
             messages.error(request, '用户名或密码错误！')
-            return redirect(request.meta.get('HTTP_REFERER', 'home'))
+            return redirect(request.META.get('HTTP_REFERER', 'home'))
     else:
         form = AuthenticationForm()
     return render(request, 'library/login_form.html', {'form': form})
@@ -77,7 +77,7 @@ def login_required_message(function):
             return function(request, *args, **kwargs)
         else:
             messages.info(request, '进行借阅操作前请先登录！')
-            return redirect(request.meta.get('HTTP_REFERER', 'home'))
+            return redirect(request.META.get('HTTP_REFERER', 'home'))
 
     return wrap
 
@@ -89,10 +89,10 @@ def register_view(request):
             user = form.save()
             auth_login(request, user)
             messages.success(request, '注册成功！将为您自动登录。')
-            return redirect(request.meta.get('HTTP_REFERER', 'home'))
+            return redirect(request.META.get('HTTP_REFERER', 'home'))
         else:
             messages.error(request, '注册失败，请检查填写的信息是否正确。')
-            return redirect(request.meta.get('HTTP_REFERER', 'home'))
+            return redirect(request.META.get('HTTP_REFERER', 'home'))
     else:
         form = CustomUserCreationForm()
     return render(request, 'library/register_form.html', {'form': form})
@@ -179,7 +179,7 @@ def borrow_book_main(request):
 
         return redirect('borrow_records')
 
-    return redirect(request.meta.get('HTTP_REFERER', 'home'))
+    return redirect(request.META.get('HTTP_REFERER', 'home'))
 
 
 @login_required
@@ -193,11 +193,16 @@ def borrow_records(request):
 
     if query:
         borrows = borrows.filter(book__title__icontains=query)
-        messages.success(request,
-                         f'找到 {borrows.count()} 条借阅记录与"{query}"相关！' if borrows.exists() else f'没有找到与"{query}"相关的借阅记录。')
+        count = borrows.count()
+        if count:
+            messages.success(request, f'找到 {count} 条借阅记录与"{query}"相关！')
+        else:
+            messages.warning(request, f'没有找到与"{query}"相关的借阅记录。')
 
     if status_filter:
         borrows = borrows.filter(is_returned=status_filter)
+        count = borrows.count()
+        messages.info(request, f'共有 {count} 条符合筛选条件的借阅记录。')
 
     if sort in ['borrow_date', '-borrow_date', 'due_date', '-due_date', 'return_date', '-return_date', 'is_returned',
                 '-is_returned']:
@@ -205,6 +210,8 @@ def borrow_records(request):
     elif sort in ['title', '-title']:
         reverse = sort.startswith('-')
         borrows = sorted(borrows, key=lambda item: lazy_pinyin(item.book.title)[0], reverse=reverse)
+    else:
+        borrows = borrows.order_by('is_returned', 'id')
 
     paginator = Paginator(borrows, 10)
     page_number = request.GET.get('page')
@@ -212,26 +219,28 @@ def borrow_records(request):
 
     if request.method == 'POST':
         borrow_ids = request.POST.getlist('return_books')
-
         if not borrow_ids:
             messages.warning(request, '未选择任何书籍进行归还。')
             return redirect('borrow_records')
+
         borrows_to_return = Borrow.objects.filter(id__in=borrow_ids, user=user)
         already_returned = set()
         to_update = set()
-        for borrow in borrows_to_return:
-            if borrow.is_returned:
-                already_returned.add(borrow)
-            else:
-                borrow.is_returned = True
-                borrow.return_date = timezone.now()
-                to_update.add(borrow)
-        if to_update:
-            Borrow.objects.bulk_update(list(to_update), ['is_returned', 'return_date'])
-            for borrow in to_update:
-                messages.success(request, f'成功归还书籍《{borrow.book.title}》')
-        for borrow in already_returned:
-            messages.warning(request, f'书籍《{borrow.book.title}》已于 {borrow.return_date} 归还')
+        with transaction.atomic():
+            for borrow in borrows_to_return:
+                if borrow.is_returned:
+                    already_returned.add(borrow)
+                else:
+                    borrow.is_returned = True
+                    borrow.return_date = timezone.now()
+                    to_update.add(borrow)
+
+            if to_update:
+                Borrow.objects.bulk_update(to_update, ['is_returned', 'return_date'])
+                for borrow in to_update:
+                    messages.success(request, f'成功归还书籍《{borrow.book.title}》')
+            for borrow in already_returned:
+                messages.warning(request, f'书籍《{borrow.book.title}》已于 {borrow.return_date} 归还')
 
         return redirect('borrow_records')
 

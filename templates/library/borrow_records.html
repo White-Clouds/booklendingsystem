@@ -2,15 +2,21 @@
 
 {% block content %}
     <h1 class="mb-4">我的借阅记录</h1>
-    <form method="get" class="form-inline mb-3">
-        <input type="text" name="q" class="form-control mr-2" placeholder="搜索书名" value="{{ query }}">
-        <select name="status" class="form-control mr-2">
-            <option value="">所有状态</option>
-            <option value="0" {% if status_filter == '0' %}selected{% endif %}>未归还</option>
-            <option value="1" {% if status_filter == '1' %}selected{% endif %}>已归还</option>
-        </select>
-        <button type="submit" class="btn btn-primary">搜索</button>
-    </form>
+    <div class="d-flex justify-content-between mb-3">
+        <form method="get" class="form-inline">
+            <input type="text" name="q" class="form-control mr-2" placeholder="搜索书名" value="{{ query }}">
+            <button type="submit" class="btn btn-primary">搜索</button>
+        </form>
+        <form method="get" class="form-inline">
+            <input type="hidden" name="q" value="{{ query }}">
+            <select name="status" class="form-control mr-2">
+                <option value="">所有状态</option>
+                <option value="0" {% if status_filter == '0' %}selected{% endif %}>未归还</option>
+                <option value="1" {% if status_filter == '1' %}selected{% endif %}>已归还</option>
+            </select>
+            <button type="submit" class="btn btn-primary">筛选</button>
+        </form>
+    </div>
     <form method="post">
         {% csrf_token %}
         <table class="table table-striped">
