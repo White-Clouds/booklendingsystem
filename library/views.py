@@ -190,7 +190,7 @@ def borrow_book_main(request):
 def borrow_records(request):
     user = request.user
     query = request.GET.get('q', '')
-    status_filter = request.GET.get('status')
+    status_filter = request.GET.get('status', '')
     sort = request.GET.get('sort', 'is_returned')
 
     borrows = Borrow.objects.filter(user=user).select_related('book', 'book__category')
@@ -203,8 +203,11 @@ def borrow_records(request):
         else:
             messages.warning(request, f'没有找到与"{query}"相关的借阅记录。')
 
-    if status_filter:
-        borrows = borrows.filter(is_returned=status_filter)
+    if status_filter is not None and status_filter != '':
+        if status_filter == '0':
+            borrows = borrows.filter(is_returned=False)
+        elif status_filter == '1':
+            borrows = borrows.filter(is_returned=True)
         count = borrows.count()
         messages.info(request, f'共有 {count} 条符合筛选条件的借阅记录。')
 
@@ -216,7 +219,9 @@ def borrow_records(request):
         borrows = sorted(borrows, key=lambda item: lazy_pinyin(item.book.title)[0], reverse=reverse)
     elif sort in ['category', '-category']:
         reverse = sort.startswith('-')
-        borrows = sorted(borrows, key=lambda item: lazy_pinyin(item.book.category.name if item.book and item.book.category else '')[0], reverse=reverse)
+        borrows = sorted(
+            borrows, key=lambda item:
+            lazy_pinyin(item.book.category.name if item.book and item.book.category else '')[0], reverse=reverse)
     else:
         borrows = borrows.order_by('is_returned', 'id')
 
