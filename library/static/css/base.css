@@ -8,3 +8,8 @@
 .sort-buttons a {
     color: gray;
 }
+
+.column-25p {
+    width: 25%;
+    word-wrap: break-word;
+}
