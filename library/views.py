@@ -13,7 +13,7 @@ from django.utils import timezone
 from pypinyin import lazy_pinyin
 
 from .forms import UserForm, CustomUserCreationForm
-from .models import Book, Borrow
+from .models import Book, Borrow, Category
 
 User = get_user_model()
 
@@ -21,6 +21,7 @@ User = get_user_model()
 def home(request):
     query = request.GET.get('q', '')
     sort = request.GET.get('sort', 'id')
+    category_filter = request.GET.get('category', '')
 
     books = Book.objects.all()
     if query:
@@ -30,6 +31,10 @@ def home(request):
             messages.success(request, f'找到 {count} 本书籍与"{query}"相关！')
         else:
             messages.warning(request, f'没有找到与"{query}"相关的书籍。')
+
+    if category_filter:
+        books = books.filter(category_id=category_filter)
+        messages.info(request, f'筛选出 {books.count()} 本"{Category.objects.get(id=category_filter)}"类别的书籍。')
 
     if sort in ['title', '-title', 'author', '-author', 'category', '-category']:
         reverse = sort.startswith('-')
@@ -46,10 +51,14 @@ def home(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    categories = Category.objects.all()
+
     return render(request, 'library/home.html', {
         'page_obj': page_obj,
         'query': query,
         'sort': sort,
+        'category_filter': category_filter,
+        'categories': categories,
     })
 
 
@@ -191,6 +200,7 @@ def borrow_records(request):
     user = request.user
     query = request.GET.get('q', '')
     status_filter = request.GET.get('status', '')
+    category_filter = request.GET.get('category', '')
     sort = request.GET.get('sort', 'is_returned')
 
     borrows = Borrow.objects.filter(user=user).select_related('book', 'book__category')
@@ -210,6 +220,11 @@ def borrow_records(request):
             borrows = borrows.filter(is_returned=True)
         count = borrows.count()
         messages.info(request, f'共有 {count} 条符合筛选条件的借阅记录。')
+
+    if category_filter:
+        borrows = borrows.filter(book__category_id=category_filter)
+        messages.info(request,
+                      f'筛选出 {borrows.count()} 条"{Category.objects.get(id=category_filter)}"类别的借阅记录。')
 
     if sort in ['borrow_date', '-borrow_date', 'due_date', '-due_date', 'return_date', '-return_date', 'is_returned',
                 '-is_returned']:
@@ -256,11 +271,15 @@ def borrow_records(request):
 
         return redirect('borrow_records')
 
+    categories = Category.objects.all()
+
     return render(request, 'library/borrow_records.html', {
         'page_obj': page_obj,
         'query': query,
         'status_filter': status_filter,
+        'category_filter': category_filter,
         'sort': sort,
+        'categories': categories,
     })
 
 

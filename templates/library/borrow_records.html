@@ -6,6 +6,7 @@
         <form method="get" class="form-inline">
             <input type="hidden" name="page" value="{{ page_obj.number }}">
             <input type="hidden" name="sort" value="{{ sort }}">
+            <input type="hidden" name="category" value="{{ category_filter }}">
             <input type="hidden" name="status" value="{{ status_filter }}">
             <input type="text" name="q" class="form-control mr-2" placeholder="搜索书名" value="{{ query }}">
             <button type="submit" class="btn btn-primary">搜索</button>
@@ -13,6 +14,12 @@
         <form method="get" class="form-inline">
             <input type="hidden" name="page" value="{{ page_obj.number }}">
             <input type="hidden" name="sort" value="{{ sort }}">
+            <select name="category" class="form-control mr-2">
+                <option value="">所有分类</option>
+                {% for category in categories %}
+                    <option value="{{ category.id }}" {% if category_filter|default:'' == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                {% endfor %}
+            </select>
             <select name="status" class="form-control mr-2">
                 <option value="">所有状态</option>
                 <option value="0" {% if status_filter == '0' %}selected{% endif %}>未归还</option>
@@ -30,44 +37,44 @@
                 <th scope="col"><input type="checkbox" id="select-all"></th>
                 <th scope="col" class="column-25p">
                     书名
-                    <a href="?page={{ page_obj.number }}&sort=title&status={{ status_filter }}&q={{ query }}"
+                    <a href="?page={{ page_obj.number }}&sort=title&category={{ category_filter }}&status={{ status_filter }}&q={{ query }}"
                        class="sort-up"><i class="fa-solid fa-arrow-up-long"></i></a>
-                    <a href="?page={{ page_obj.number }}&sort=-title&status={{ status_filter }}&q={{ query }}"
+                    <a href="?page={{ page_obj.number }}&sort=-title&category={{ category_filter }}&status={{ status_filter }}&q={{ query }}"
                        class="sort-down"><i class="fa-solid fa-arrow-down-long"></i></a>
                 </th>
                 <th scope="col">
                     分类
-                    <a href="?page={{ page_obj.number }}&sort=category&status={{ status_filter }}&q={{ query }}"
+                    <a href="?page={{ page_obj.number }}&sort=category&category={{ category_filter }}&status={{ status_filter }}&q={{ query }}"
                        class="sort-up"><i class="fa-solid fa-arrow-up-long"></i></a>
-                    <a href="?page={{ page_obj.number }}&sort=-category&status={{ status_filter }}&q={{ query }}"
+                    <a href="?page={{ page_obj.number }}&sort=-category&category={{ category_filter }}&status={{ status_filter }}&q={{ query }}"
                        class="sort-down"><i class="fa-solid fa-arrow-down-long"></i></a>
                 </th>
                 <th scope="col">
                     借阅日期
-                    <a href="?page={{ page_obj.number }}&sort=borrow_date&status={{ status_filter }}&q={{ query }}"
+                    <a href="?page={{ page_obj.number }}&sort=borrow_date&category={{ category_filter }}&status={{ status_filter }}&q={{ query }}"
                        class="sort-up"><i class="fa-solid fa-arrow-up-long"></i></a>
-                    <a href="?page={{ page_obj.number }}&sort=-borrow_date&status={{ status_filter }}&q={{ query }}"
+                    <a href="?page={{ page_obj.number }}&sort=-borrow_date&category={{ category_filter }}&status={{ status_filter }}&q={{ query }}"
                        class="sort-down"><i class="fa-solid fa-arrow-down-long"></i></a>
                 </th>
                 <th scope="col">
                     到期日期
-                    <a href="?page={{ page_obj.number }}&sort=due_date&status={{ status_filter }}&q={{ query }}"
+                    <a href="?page={{ page_obj.number }}&sort=due_date&category={{ category_filter }}&status={{ status_filter }}&q={{ query }}"
                        class="sort-up"><i class="fa-solid fa-arrow-up-long"></i></a>
-                    <a href="?page={{ page_obj.number }}&sort=-due_date&status={{ status_filter }}&q={{ query }}"
+                    <a href="?page={{ page_obj.number }}&sort=-due_date&category={{ category_filter }}&status={{ status_filter }}&q={{ query }}"
                        class="sort-down"><i class="fa-solid fa-arrow-down-long"></i></a>
                 </th>
                 <th scope="col">
                     归还日期
-                    <a href="?page={{ page_obj.number }}&sort=return_date&status={{ status_filter }}&q={{ query }}"
+                    <a href="?page={{ page_obj.number }}&sort=return_date&category={{ category_filter }}&status={{ status_filter }}&q={{ query }}"
                        class="sort-up"><i class="fa-solid fa-arrow-up-long"></i></a>
-                    <a href="?page={{ page_obj.number }}&sort=-return_date&status={{ status_filter }}&q={{ query }}"
+                    <a href="?page={{ page_obj.number }}&sort=-return_date&category={{ category_filter }}&status={{ status_filter }}&q={{ query }}"
                        class="sort-down"><i class="fa-solid fa-arrow-down-long"></i></a>
                 </th>
                 <th scope="col">
                     状态
-                    <a href="?page={{ page_obj.number }}&sort=is_returned&status={{ status_filter }}&q={{ query }}"
+                    <a href="?page={{ page_obj.number }}&sort=is_returned&category={{ category_filter }}&status={{ status_filter }}&q={{ query }}"
                        class="sort-up"><i class="fa-solid fa-arrow-up-long"></i></a>
-                    <a href="?page={{ page_obj.number }}&sort=-is_returned&status={{ status_filter }}&q={{ query }}"
+                    <a href="?page={{ page_obj.number }}&sort=-is_returned&category={{ category_filter }}&status={{ status_filter }}&q={{ query }}"
                        class="sort-down"><i class="fa-solid fa-arrow-down-long"></i></a>
                 </th>
             </tr>
@@ -78,7 +85,7 @@
                     <td><input type="checkbox" name="return_books" value="{{ borrow.id }}"
                                {% if borrow.is_returned %}disabled{% endif %}></td>
                     <td class="column-25p">{{ borrow.book.title }}</td>
-                    <td>{{ borrow.book.category }}</td>
+                    <td>{{ borrow.book.category.name }}</td>
                     <td>{{ borrow.borrow_date }}</td>
                     <td>{{ borrow.due_date }}</td>
                     <td>{{ borrow.return_date }}</td>
@@ -92,15 +99,15 @@
     <nav>
         <ul class="pagination">
             {% if page_obj.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page=1&sort={{ sort }}&status={{ status_filter }}&q={{ query }}">首页</a></li>
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&sort={{ sort }}&status={{ status_filter }}&q={{ query }}">上一页</a></li>
+                <li class="page-item"><a class="page-link" href="?page=1&sort={{ sort }}&category={{ category_filter }}&status={{ status_filter }}&q={{ query }}">首页</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&sort={{ sort }}&category={{ category_filter }}&status={{ status_filter }}&q={{ query }}">上一页</a></li>
             {% endif %}
             <li class="page-item disabled">
                 <span class="page-link">第 {{ page_obj.number }} 页，共 {{ page_obj.paginator.num_pages }} 页</span>
             </li>
             {% if page_obj.has_next %}
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&sort={{ sort }}&status={{ status_filter }}&q={{ query }}">下一页</a></li>
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&sort={{ sort }}&status={{ status_filter }}&q={{ query }}">末页</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&sort={{ sort }}&category={{ category_filter }}&status={{ status_filter }}&q={{ query }}">下一页</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&sort={{ sort }}&category={{ category_filter }}&status={{ status_filter }}&q={{ query }}">末页</a></li>
             {% endif %}
         </ul>
     </nav>
