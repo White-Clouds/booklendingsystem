@@ -23,7 +23,7 @@
             <button type="submit" class="btn btn-primary">筛选</button>
         </form>
     </div>
-    <form method="post" action="{% url 'borrow_book_main' %}">
+    <form method="post" action="{% url 'borrow_book' %}">
         {% csrf_token %}
         <table class="table table-striped">
             <thead>
@@ -59,7 +59,7 @@
             <tbody>
             {% for book in page_obj %}
                 <tr>
-                    <td><input type="checkbox" name="borrow_book_main" value="{{ book.id }}"></td>
+                    <td><input type="checkbox" name="borrow_book" value="{{ book.id }}"></td>
                     <td class="column-25p">{{ book.title }}</td>
                     <td class="column-25p">{{ book.author }}</td>
                     <td>{{ book.category }}</td>
@@ -98,7 +98,7 @@
     </nav>
     <script>
         document.getElementById('select-all').onclick = function () {
-            const checkboxes = document.getElementsByName('borrow_book_main');
+            const checkboxes = document.getElementsByName('borrow_book');
             for (const checkbox of checkboxes) {
                 checkbox.checked = this.checked;
             }

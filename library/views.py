@@ -121,9 +121,9 @@ def book_detail(request, book_id):
 
 
 @login_required_message
-def borrow_book_main(request):
+def borrow_book(request):
     if request.method == 'POST':
-        book_ids = request.POST.getlist('borrow_book_main')
+        book_ids = request.POST.getlist('borrow_book')
         days = int(request.POST.get('days', 7))
         days = min(max(days, 1), 30)
         due_date = timezone.now().date() + timedelta(days=days)

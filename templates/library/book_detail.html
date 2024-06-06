@@ -26,14 +26,21 @@
         </div>
     </div>
     {% if user.is_authenticated %}
-        <form method="post" action="{% url 'borrow_book_main' %}">
+        <form method="post" action="{% url 'borrow_book' %}">
             {% csrf_token %}
-            <input type="hidden" name="borrow_book_main" value="{{ book.id }}">
-            <div class="form-group">
-                <label for="days">借阅天数：</label>
-                <input type="number" id="days" name="days" class="form-control" value="7" min="1" max="30" required>
+            <input type="hidden" name="borrow_book" value="{{ book.id }}">
+            <div class="row align-items-end mb-3">
+                <div class="col-5">
+                    <div class="form-group mb-0">
+                        <label for="days">借阅天数（1-30天）：</label>
+                        <input type="number" id="days" name="days" class="form-control" value="7" min="1" max="30"
+                               required>
+                    </div>
+                </div>
+                <div class="col-2">
+                    <button type="submit" class="btn btn-success">借阅</button>
+                </div>
             </div>
-            <button type="submit" class="btn btn-success">借阅</button>
         </form>
     {% else %}
         <p><a href="#" data-toggle="modal" data-target="#loginModal">登录</a>或<a href="#" data-toggle="modal"
