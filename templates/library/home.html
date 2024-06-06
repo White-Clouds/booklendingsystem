@@ -60,7 +60,7 @@
             {% for book in page_obj %}
                 <tr>
                     <td><input type="checkbox" name="borrow_book" value="{{ book.id }}"></td>
-                    <td class="column-25p">{{ book.title }}</td>
+                    <td class="column-25p"><a href="{% url 'book_detail' book.id %}" class="text-dark">{{ book.title }}</a></td>
                     <td class="column-25p">{{ book.author }}</td>
                     <td>{{ book.category }}</td>
                     <td>{{ book.published_year }}</td>
