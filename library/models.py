@@ -44,6 +44,10 @@ class Book(models.Model):
     isbn = models.BigIntegerField(unique=True, verbose_name='ISBN')
     # 图书的出版年份，可以为空
     published_year = models.BigIntegerField(null=True, blank=True, verbose_name='出版年份')
+    # 图书的封面链接，可以为空
+    cover = models.URLField(null=True, verbose_name='封面链接')
+    # 图书的简介，可以为空
+    summary = models.TextField(null=True, verbose_name='简介')
 
     def __str__(self):
         # 返回图书的标题作为对象的字符串表示

@@ -48,7 +48,7 @@ class BookAdmin(admin.ModelAdmin):
     # 定义在admin界面编辑页面的字段组
     fieldsets = (
         (None, {
-            'fields': ('title', 'author', 'publisher', 'category', 'isbn', 'published_year')
+            'fields': ('title', 'author', 'publisher', 'category', 'isbn', 'published_year', 'cover', 'summary')
         }),
     )
 

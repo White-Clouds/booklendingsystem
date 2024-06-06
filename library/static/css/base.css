@@ -13,3 +13,24 @@
     width: 25%;
     word-wrap: break-word;
 }
+
+.book-cover {
+    width: auto;
+    height: 30vh;
+}
+
+.book-detail-title {
+    margin-bottom: 20px;
+}
+
+.book-details {
+    padding-left: 20px;
+}
+
+.book-details p {
+    margin-bottom: 10px;
+}
+
+.book-summary {
+    text-indent: 2em;
+}

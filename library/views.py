@@ -120,37 +120,6 @@ def book_detail(request, book_id):
     return render(request, 'library/book_detail.html', {'book': book})
 
 
-@login_required
-def borrow_book(request, book_id):
-    book = get_object_or_404(Book, pk=book_id)
-
-    if request.method == 'POST':
-        days = int(request.POST.get('days', 7))
-        days = min(max(days, 1), 30)
-        due_date = timezone.now().date() + timedelta(days=days)
-
-        borrow, created = Borrow.objects.get_or_create(
-            user=request.user,
-            book=book,
-            is_returned=False,
-            defaults={'due_date': due_date}
-        )
-
-        if created:
-            messages.success(request, f'您已成功借阅《{book.title}》！')
-        else:
-            if borrow.due_date != due_date:
-                borrow.due_date = due_date
-                borrow.save(update_fields=['due_date'])
-                messages.info(request, f'您已更新《{book.title}》的到期时间！')
-            else:
-                messages.info(request, f'您已经借阅了《{book.title}》，到期时间未改变。')
-
-        return redirect('borrow_records')
-
-    return render(request, 'library/book_detail.html', {'book': book})
-
-
 @login_required_message
 def borrow_book_main(request):
     if request.method == 'POST':
