@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import logout as auth_logout
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
@@ -118,6 +119,13 @@ def book_detail(request, book_id):
         messages.error(request, '书籍不存在或已被删除。')
         return redirect('home')
     return render(request, 'library/book_detail.html', {'book': book})
+
+
+@login_required
+def logout_view(request):
+    auth_logout(request)
+    messages.success(request, '您已成功登出！')
+    return redirect('home')
 
 
 @login_required_message
