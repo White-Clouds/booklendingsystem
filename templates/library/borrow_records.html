@@ -84,7 +84,7 @@
                 <tr>
                     <td><input type="checkbox" name="return_books" value="{{ borrow.id }}"
                                {% if borrow.is_returned %}disabled{% endif %}></td>
-                    <td class="column-25p">{{ borrow.book.title }}</td>
+                    <td class="column-25p"><a href="{% url 'book_detail' borrow.book.id %}" class="text-dark">{{ borrow.book.title }}</a></td>
                     <td>{{ borrow.book.category.name }}</td>
                     <td>{{ borrow.borrow_date }}</td>
                     <td>{{ borrow.due_date }}</td>

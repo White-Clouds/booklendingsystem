@@ -1,4 +1,4 @@
-# 图书借阅系统 bookledingsystem
+# 图书借阅系统 booklendingsystem
 
 ## 简介 Abstract
 
@@ -34,8 +34,25 @@ django-pagination~=1.0.7
 mysqlclient~=2.2.4
 pycparser~=2.22
 pypinyin~=0.51.0
+python-decouple~=3.8
 sqlparse~=0.5.0
 tzdata~=2024.1
+```
+
+### 环境 Environment
+
+在`.env`文件中设置环境变量（需要自行创建）
+
+```plaintext
+SECRET_KEY=
+DEBUG=True
+DATABASE_NAME=
+DATABASE_USER=
+DATABASE_PASSWORD=
+DATABASE_HOST=localhost
+DATABASE_PORT=3306
+LANGUAGE_CODE=zh-hans
+TIME_ZONE=Asia/Shanghai
 ```
 
 ## TODO
