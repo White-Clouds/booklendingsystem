@@ -56,6 +56,15 @@ LANGUAGE_CODE=zh-hans
 TIME_ZONE=Asia/Shanghai
 ```
 
+## 使用说明 Usage
+
+安装环境并配置完数据库链接后，打开PyCharm的终端，或者自行进入项目的venv环境，运行`python manage.py migrate`
+命令迁移数据库，运行`python manage.py createsuperuser`命令创建超级用户。
+
+打开数据库管理工具如Navicat，在你链接的数据库上运行`books.sql`和`categories.sql`文件，初始化数据。
+
+`books.sql`中不包含书籍封面的链接，你可以自行添加。
+
 ## TODO
 
 ### v1.0
@@ -82,7 +91,6 @@ TIME_ZONE=Asia/Shanghai
     - [ ] ~~全站搜索~~
     - [ ] ~~部分搜索添加结果页~~
     - [x] 搜索结果排序
-    
 
 ### v2.0+ (有时间就做)
 
@@ -106,7 +114,6 @@ TIME_ZONE=Asia/Shanghai
     - [ ] 用户收藏
     - [ ] 用户关注
 - [ ] 全站搜索
-
 
 ## 许可证 License
 
