@@ -71,12 +71,12 @@ class Book(models.Model):
 # 定义了一个名为UserManager的模型管理器，用于创建用户和超级用户
 class UserManager(BaseUserManager):
     # 创建用户的方法
-    def create_user(self, username, email, phone, password=None):
+    def create_user(self, username, email, password=123456):
         # 如果没有提供电子邮件，则抛出错误
         if not email:
             raise ValueError('用户必须有电子邮件地址')
         # 创建用户
-        user = self.model(username=username, email=self.normalize_email(email), phone=phone)
+        user = self.model(username=username, email=self.normalize_email(email))
         # 设置用户密码
         user.set_password(password)
         # 保存用户
@@ -84,9 +84,9 @@ class UserManager(BaseUserManager):
         return user
 
     # 创建超级用户的方法
-    def create_superuser(self, username, email, phone, password=None):
+    def create_superuser(self, username, email, password=123456):
         # 创建用户
-        user = self.create_user(username, email, phone, password)
+        user = self.create_user(username, email, password)
         # 设置用户为管理员
         user.is_admin = True
         # 设置用户为员工

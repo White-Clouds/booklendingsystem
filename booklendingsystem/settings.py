@@ -141,3 +141,8 @@ MESSAGE_TAGS = {
     message_constants.WARNING: '警告',
     message_constants.ERROR: '错误',
 }
+
+# Optional: Use PBKDF2PasswordHasher as the default password hasher
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher'
+]
